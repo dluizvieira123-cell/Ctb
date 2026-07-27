@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CTB Operacional — GCM</title>
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#0b0e13;
+  --panel:#131820;
+  --panel2:#1a212c;
+  --line:#232b38;
+  --ink:#e7ecf3;
+  --ink-dim:#8996a8;
+  --amber:#f2a63a;
+  --leve:#3b82f6;
+  --media:#eab308;
+  --grave:#f97316;
+  --gravissima:#dc2626;
+  --crime:#7c3aed;
+  --mono:'Courier New',ui-monospace,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);height:100%;}
+body{display:flex;flex-direction:column;min-height:100vh;}
+
+/* ---------- HEADER ---------- */
+header{
+  background:linear-gradient(180deg,#141a23,#0f141b);
+  border-bottom:2px solid var(--amber);
+  padding:14px 16px 12px;
+  position:sticky; top:0; z-index:50;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-badge{
+  width:38px;height:38px;border-radius:6px;
+  background:var(--panel2); border:1px solid var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono); font-weight:700; color:var(--amber); font-size:13px;
+}
+.brand h1{font-size:16px; margin:0; letter-spacing:0.5px; font-weight:800;}
+.brand span{display:block; font-size:10.5px; color:var(--ink-dim); font-family:var(--mono); letter-spacing:1px; margin-top:1px;}
+
+.searchbar{margin-top:12px; position:relative;}
+.searchbar input{
+  width:100%; padding:12px 14px 12px 38px; border-radius:10px;
+  border:1px solid var(--line); background:var(--panel); color:var(--ink);
+  font-size:15px; outline:none;
+}
+.searchbar input:focus{border-color:var(--amber);}
+.searchbar::before{
+  content:"⌕"; position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  color:var(--ink-dim); font-size:18px;
+}
+
+/* ---------- TABS ---------- */
+nav.tabs{
+  display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; background:var(--bg);
+  border-bottom:1px solid var(--line);
+}
+nav.tabs button{
+  flex:1 1 auto; padding:8px 10px; border-radius:20px; border:1px solid var(--line);
+  background:var(--panel); color:var(--ink-dim); font-size:11.8px; font-weight:600;
+  white-space:nowrap; text-align:center;
+}
+nav.tabs button.active{background:var(--amber); color:#1a1200; border-color:var(--amber);}
+@media (max-width:380px){
+  nav.tabs button{font-size:11px; padding:7px 8px;}
+}
+
+/* ---------- MAIN ---------- */
+main{flex:1; padding:14px 14px 90px;}
+.hidden{display:none !important;}
+
+.section-title{font-size:12px; text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-dim); margin:18px 0 8px; font-family:var(--mono);}
+.section-title:first-child{margin-top:0;}
+
+/* grav filter chips */
+.chiprow{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+.chip{padding:6px 11px; border-radius:16px; font-size:11.5px; font-weight:700; border:1px solid transparent; opacity:.55;}
+.chip.on{opacity:1;}
+.chip[data-g="leve"]{background:rgba(59,130,246,.15); color:var(--leve); border-color:var(--leve);}
+.chip[data-g="media"]{background:rgba(234,179,8,.15); color:var(--media); border-color:var(--media);}
+.chip[data-g="grave"]{background:rgba(249,115,22,.15); color:var(--grave); border-color:var(--grave);}
+.chip[data-g="gravissima"]{background:rgba(220,38,38,.15); color:var(--gravissima); border-color:var(--gravissima);}
+.chip[data-g="crime"]{background:rgba(124,58,237,.18); color:#a78bfa; border-color:#7c3aed;}
+.chip[data-g="all"]{background:var(--panel2); color:var(--ink); border-color:var(--line);}
+
+/* ---------- CARDS: infração ---------- */
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:13px 14px; margin-bottom:10px; border-left:4px solid var(--ink-dim);
+}
+.card.leve{border-left-color:var(--leve);}
+.card.media{border-left-color:var(--media);}
+.card.grave{border-left-color:var(--grave);}
+.card.gravissima{border-left-color:var(--gravissima);}
+.card.crime{border-left-color:var(--crime);}
+
+.card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+.card-art{font-family:var(--mono); font-weight:800; font-size:13px; color:var(--amber);}
+.badge{font-size:10px; font-weight:800; padding:3px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap;}
+.badge.leve{background:rgba(59,130,246,.18); color:var(--leve);}
+.badge.media{background:rgba(234,179,8,.18); color:var(--media);}
+.badge.grave{background:rgba(249,115,22,.18); color:var(--grave);}
+.badge.gravissima{background:rgba(220,38,38,.18); color:var(--gravissima);}
+.badge.crime{background:rgba(124,58,237,.2); color:#a78bfa;}
+
+.card-desc{font-size:14px; line-height:1.42; margin:8px 0 0;}
+.card-meta{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:11.5px; color:var(--ink-dim); font-family:var(--mono);}
+.card-meta b{color:var(--ink); font-family:var(--sans);}
+.card-obs{margin-top:9px; padding:8px 10px; background:var(--panel2); border-radius:8px; font-size:12.5px; color:#d8dde6; border-left:2px solid var(--amber);}
+.card-obs b{color:var(--amber);}
+
+/* crime card detail rows */
+.kv{display:grid; grid-template-columns:86px 1fr; gap:2px 10px; margin-top:9px; font-size:13px;}
+.kv .k{color:var(--ink-dim); font-size:11px; text-transform:uppercase; letter-spacing:.5px; padding-top:2px;}
+.kv .v{line-height:1.4;}
+
+/* ---------- PROCEDIMENTOS ---------- */
+.proc-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden;}
+.proc-head{padding:13px 14px; display:flex; justify-content:space-between; align-items:center; background:var(--panel2); cursor:pointer;}
+.proc-head h3{margin:0; font-size:14.5px;}
+.proc-head .arrow{color:var(--amber); font-size:14px; transition:transform .15s;}
+.proc-head.open .arrow{transform:rotate(90deg);}
+.proc-body{display:none; padding:6px 16px 14px;}
+.proc-body.open{display:block;}
+.proc-body ol{margin:6px 0 0; padding-left:20px;}
+.proc-body li{margin-bottom:9px; font-size:13.5px; line-height:1.45;}
+
+/* ---------- COMPETENCIA / SOBRE ---------- */
+.info-box{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; font-size:13.5px; line-height:1.55;}
+.info-box h3{margin:0 0 8px; font-size:14px; color:var(--amber);}
+.info-box p{margin:0 0 8px;}
+.info-box p:last-child{margin-bottom:0;}
+.tag-comp{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:8px; margin-left:6px; vertical-align:middle;}
+.tag-comp.municipal{background:rgba(34,197,94,.18); color:#4ade80;}
+.tag-comp.apoio{background:rgba(148,163,184,.18); color:#94a3b8;}
+.tag-comp.flagrante{background:rgba(220,38,38,.18); color:#f87171;}
+
+.empty{text-align:center; color:var(--ink-dim); padding:40px 10px; font-size:13.5px;}
+
+footer{
+  position:fixed; bottom:0; left:0; right:0; background:var(--panel);
+  border-top:1px solid var(--line); padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  font-size:10px; color:var(--ink-dim); text-align:center; font-family:var(--mono);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-badge">CTB</div>
+    <div>
+      <h1>Consulta Operacional de Trânsito</h1>
+      <span>GCM MATÃO · APOIO À FISCALIZAÇÃO</span>
+    </div>
+  </div>
+  <div class="searchbar">
+    <input id="searchInput" type="text" placeholder="Buscar por artigo, palavra-chave ou situação (ex: celular, racha, cadeirinha)">
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="buscar">🔎 Buscar</button>
+  <button class="tab-btn" data-tab="infracoes">📋 Infrações</button>
+  <button class="tab-btn" data-tab="crimes">⚠️ Crimes de Trânsito</button>
+  <button class="tab-btn" data-tab="procedimentos">🚓 Procedimentos</button>
+  <button class="tab-btn" data-tab="competencia">🏛️ Competência</button>
+</nav>
+
+<main>
+
+  <!-- BUSCAR (default) -->
+  <section id="tab-buscar">
+    <div class="chiprow" id="filterChips">
+      <span class="chip on" data-g="all">Todos</span>
+      <span class="chip on" data-g="leve">Leve</span>
+      <span class="chip on" data-g="media">Média</span>
+      <span class="chip on" data-g="grave">Grave</span>
+      <span class="chip on" data-g="gravissima">Gravíssima</span>
+      <span class="chip on" data-g="crime">Crime</span>
+    </div>
+    <div id="resultsList"></div>
+  </section>
+
+  <!-- INFRAÇÕES POR GRAVIDADE -->
+  <section id="tab-infracoes" class="hidden"></section>
+
+  <!-- CRIMES -->
+  <section id="tab-crimes" class="hidden"></section>
+
+  <!-- PROCEDIMENTOS -->
+  <section id="tab-procedimentos" class="hidden"></section>
+
+  <!-- COMPETÊNCIA -->
+  <section id="tab-competencia" class="hidden">
+    <div class="info-box">
+      <h3>Quando a GCM pode autuar diretamente</h3>
+      <p><span class="tag-comp municipal">MUNICIPAL</span> Infrações ligadas a estacionamento, parada, sinalização local, faixas/vagas exclusivas e posturas viárias em vias urbanas sob circunscrição do município — normalmente respaldadas por convênio com o órgão estadual de trânsito (DETRAN/DER) e integração ao Sistema Nacional de Trânsito, conforme art. 23 e art. 24 do CTB.</p>
+      <p><span class="tag-comp apoio">APOIO</span> Infrações que exigem equipamento homologado (radar, etilômetro certificado) ou fiscalização em rodovia — a GCM normalmente atua constatando a irregularidade, prestando apoio e acionando o órgão competente (PRE, PRF, órgão executivo de trânsito) para a autuação formal.</p>
+      <p><span class="tag-comp flagrante">FLAGRANTE / CRIME</span> Nos crimes de trânsito (arts. 302 a 312, CTB), qualquer agente público — incluindo a GCM — tem o dever de agir: isolar o local, prestar/acionar socorro, preservar vestígios e comunicar imediatamente a autoridade policial competente para lavratura do flagrante ou TCO.</p>
+    </div>
+    <div class="info-box">
+      <h3>Base legal da atuação da GCM em trânsito</h3>
+      <p>A Guarda Municipal pode exercer o poder de polícia de trânsito no âmbito municipal quando o município integra o Sistema Nacional de Trânsito (art. 24, CTB) e mediante convênio de mútua colaboração com o órgão estadual executivo de trânsito, nos termos da Lei 13.022/2014 (Estatuto Geral das Guardas Municipais) combinada com o CTB.</p>
+      <p>Fora dessa hipótese, a atuação da GCM em ocorrências de trânsito se dá em regime de apoio: constatação da infração, preservação do local, e comunicação ao órgão de trânsito ou à autoridade policial competente.</p>
+    </div>
+    <div class="info-box">
+      <h3>Atualização legislativa</h3>
+      <p>Base consolidada até a <b>Lei nº 15.153/2025</b> (última alteração incorporada ao CTB até o momento desta consulta), que tornou o exame toxicológico obrigatório também para a 1ª habilitação nas categorias A e B (§10, art. 148-A) e reforçou as infrações dos arts. 165-B e 165-C. Como o CTB é frequentemente alterado por leis, resoluções do CONTRAN e portarias do DETRAN/SENATRAN, confirme sempre a redação vigente do artigo antes de autuar em casos de dúvida.</p>
+    </div>
+    <div class="info-box">
+      <h3>Documentação mínima em toda ocorrência</h3>
+      <p>Identificação do condutor/veículo (CNH, CRLV, placa) · horário e local exato · descrição objetiva da conduta · registro fotográfico da sinalização e do veículo · dados de testemunhas, quando houver · artigo do CTB enquadrado · medida administrativa aplicada (retenção, remoção, recolhimento de CNH) · órgão/autoridade acionado, se for o caso.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>CTB Lei 9.503/1997 e alterações — uso operacional GCM · conferir redação vigente antes de autuar</footer>
+
+<script src="data.js"></script>
+<script>
+// ---------------------------------------------------------------
+// util
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function money(v){ return "R$ " + v.toFixed(2).replace(".", ","); }
+
+function infracaoCard(it){
+  const gi = GRAVIDADE_INFO[it.grav];
+  const compLabel = it.competencia==="municipal" ? '<span class="tag-comp municipal">MUNICIPAL</span>'
+                    : it.competencia==="flagrante" ? '<span class="tag-comp flagrante">FLAGRANTE</span>'
+                    : '<span class="tag-comp apoio">APOIO</span>';
+  return `<div class="card ${it.grav}">
+    <div class="card-top">
+      <div class="card-art">Art. ${escapeHtml(it.art)} · CTB</div>
+      <div class="badge ${it.grav}">${gi.label}</div>
+    </div>
+    <div class="card-desc">${escapeHtml(it.desc)}</div>
+    <div class="card-meta">
+      <span><b>${escapeHtml(it.infrator||"Condutor")}</b></span>
+      <span>${gi.pontos} pontos</span>
+      <span>${money(gi.valor)}</span>
+      ${compLabel}
+    </div>
+    ${it.medida && it.medida!=="—" ? `<div class="card-meta"><span>Medida administrativa: <b>${escapeHtml(it.medida)}</b></span></div>` : ""}
+    ${it.obs ? `<div class="card-obs"><b>Atenção:</b> ${escapeHtml(it.obs)}</div>` : ""}
+  </div>`;
+}
+
+function crimeCard(c){
+  return `<div class="card crime">
+    <div class="card-top">
+      <div class="card-art">Art. ${escapeHtml(c.art)} · CTB</div>
+      <div class="badge crime">Crime</div>
+    </div>
+    <div class="card-desc"><b>${escapeHtml(c.nome)}</b></div>
+    <div class="kv">
+      <div class="k">Tipificação</div><div class="v">${escapeHtml(c.tipificacao)}</div>
+      <div class="k">Pena</div><div class="v">${escapeHtml(c.pena)}</div>
+    </div>
+    <div class="card-obs"><b>Como agir:</b> ${escapeHtml(c.procedimento)}</div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------
+// BUSCAR TAB
+const activeFilters = new Set(["leve","media","grave","gravissima","crime"]);
+
+function normalize(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+
+function renderResults(){
+  const q = normalize(document.getElementById("searchInput").value.trim());
+  const list = document.getElementById("resultsList");
+  let items = [];
+
+  INFRACOES.forEach(it => {
+    if(!activeFilters.has(it.grav)) return;
+    const hay = normalize(it.art + " " + it.desc + " " + (it.obs||"") + " " + (it.infrator||""));
+    if(q === "" || hay.includes(q)) items.push({type:"infracao", data:it});
+  });
+  CRIMES.forEach(c => {
+    if(!activeFilters.has("crime")) return;
+    const hay = normalize(c.art + " " + c.nome + " " + c.tipificacao + " " + c.procedimento);
+    if(q === "" || hay.includes(q)) items.push({type:"crime", data:c});
+  });
+
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty">Nenhum resultado para essa busca.<br>Tente um termo mais simples (ex: "celular", "cadeirinha", "racha").</div>`;
+    return;
+  }
+  list.innerHTML = items.map(i => i.type==="crime" ? crimeCard(i.data) : infracaoCard(i.data)).join("");
+}
+
+document.getElementById("searchInput").addEventListener("input", renderResults);
+document.getElementById("filterChips").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  const g = chip.dataset.g;
+  if(g === "all"){
+    const allOn = ["leve","media","grave","gravissima","crime"].every(x=>activeFilters.has(x));
+    activeFilters.clear();
+    if(!allOn) ["leve","media","grave","gravissima","crime"].forEach(x=>activeFilters.add(x));
+  } else {
+    if(activeFilters.has(g)) activeFilters.delete(g); else activeFilters.add(g);
+  }
+  document.querySelectorAll(".chip").forEach(c => {
+    if(c.dataset.g === "all"){
+      c.classList.toggle("on", ["leve","media","grave","gravissima","crime"].every(x=>activeFilters.has(x)));
+    } else {
+      c.classList.toggle("on", activeFilters.has(c.dataset.g));
+    }
+  });
+  renderResults();
+});
+
+// ---------------------------------------------------------------
+// INFRAÇÕES TAB (grouped by gravidade)
+function renderInfracoesTab(){
+  const container = document.getElementById("tab-infracoes");
+  const groups = {gravissima:[], grave:[], media:[], leve:[]};
+  INFRACOES.forEach(it => groups[it.grav].push(it));
+  let html = "";
+  [["gravissima","Gravíssimas"],["grave","Graves"],["media","Médias"],["leve","Leves"]].forEach(([g,label])=>{
+    html += `<div class="section-title">${label} — ${GRAVIDADE_INFO[g].pontos} pontos · ${money(GRAVIDADE_INFO[g].valor)}</div>`;
+    html += groups[g].map(infracaoCard).join("");
+  });
+  container.innerHTML = html;
+}
+
+// CRIMES TAB
+function renderCrimesTab(){
+  const container = document.getElementById("tab-crimes");
+  container.innerHTML = `<div class="section-title">Arts. 302 a 312 — Código de Trânsito Brasileiro</div>` +
+    CRIMES.map(crimeCard).join("");
+}
+
+// PROCEDIMENTOS TAB
+function renderProcedimentosTab(){
+  const container = document.getElementById("tab-procedimentos");
+  container.innerHTML = `<div class="section-title">Passo a passo por tipo de ocorrência</div>` +
+    PROCEDIMENTOS.map((p,idx) => `
+      <div class="proc-card">
+        <div class="proc-head" data-idx="${idx}"><h3>${escapeHtml(p.titulo)}</h3><span class="arrow">▶</span></div>
+        <div class="proc-body" id="proc-body-${idx}">
+          <ol>${p.passos.map(s=>`<li>${escapeHtml(s)}</li>`).join("")}</ol>
+        </div>
+      </div>
+    `).join("");
+
+  container.querySelectorAll(".proc-head").forEach(h => {
+    h.addEventListener("click", () => {
+      const idx = h.dataset.idx;
+      h.classList.toggle("open");
+      document.getElementById(`proc-body-${idx}`).classList.toggle("open");
+    });
+  });
+}
+
+// ---------------------------------------------------------------
+// TAB SWITCHING
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    ["buscar","infracoes","crimes","procedimentos","competencia"].forEach(t=>{
+      document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
+    });
+  });
+});
+
+// init
+renderResults();
+renderInfracoesTab();
+renderCrimesTab();
+renderProcedimentosTab();
+
+// service worker (offline)
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
