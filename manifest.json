@@ -1,0 +1,13 @@
+{
+  "name": "CTB Operacional - GCM Matão",
+  "short_name": "CTB Operacional",
+  "description": "Consulta rápida de infrações do CTB, crimes de trânsito e procedimentos de ocorrência para GCM",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0e13",
+  "theme_color": "#0d1117",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
